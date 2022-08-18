@@ -48,12 +48,12 @@ export const scoreMessage = (
   lessThan
 ) => {
   if (bestScore) {
-    return `You were the best quizzer`
+    return `You were the best quizzer`;
   } else if (worseScore) {
-    return `You were the worst quizzer`
+    return `You were the worst quizzer`;
   } else if (score === minScore) {
-    return `You were worse than ${greaterThan}% of all quizzer`
+    return `You were worse than ${greaterThan}% of all quizzer`;
   } else {
-    return `You were better than ${lessThan}% of all quizzer`
+    return `You were better than ${lessThan}% of all quizzer`;
   }
 };

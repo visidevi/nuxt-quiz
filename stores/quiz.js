@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { collection, query, doc, onSnapshot, setDoc } from "firebase/firestore";
 import {
   getNumberOfUsersPerScore,
   percentagesByScore,
@@ -9,7 +10,6 @@ import {
 /**
  * Firebase
  */
-import { collection, query, doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "@/js/firebase";
 
 const ROUND = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -46,7 +46,7 @@ export const useQuizStore = defineStore({
       state.questions.sort(() => 0.5 - Math.random()).slice(0, state.quantity),
   },
   actions: {
-    async getQuestions() {
+    getQuestions() {
       const q = query(questionsCollectionRef);
       onSnapshot(q, (querySnapshot) => {
         const raw = [];
@@ -64,39 +64,44 @@ export const useQuizStore = defineStore({
     },
     async getScore(score) {
       const q = query(answersCollectionRef);
-      const scores = [];
-      onSnapshot(q, (querySnapshot) => {
-        querySnapshot.forEach((item) => scores.unshift(item.data().score));
+      let scores = [];
+      await onSnapshot(q, (querySnapshot) => {
+        const raw = [];
+        querySnapshot.forEach((item) => raw.unshift(item.data().score));
+        console.log(raw, "RAWWWW");
+        scores = raw;
+
+        console.log(scores, "RAWWWWscores");
+        let total = 0;
+        scores.forEach((num) => {
+          total += num;
+        });
+        const average = total / scores.length;
+        console.log("Average:", average, "score:", score);
+        const numberOfUsersPerScore = getNumberOfUsersPerScore(scores);
+        console.log(numberOfUsersPerScore, "numberOfUsersPerScore");
+        console.log(score, "score");
+        const totalItems = scores.length;
+        const uniqueItems = [...new Set(scores)];
+
+        const obj = percentagesByScore(scores, uniqueItems, totalItems);
+        this.greaterThan = greater(obj, score);
+        this.lessThan = less(obj, score);
+
+        this.bestScore =
+          score === this.maxScore && obj[score] === this.maxPercentage;
+        this.worseScore =
+          score === this.minScore && obj[score] === this.maxPercentage;
+
+        this.concludingMsg = scoreMessage(
+          this.bestScore,
+          this.worseScore,
+          score,
+          this.minScore,
+          greater(obj, score),
+          less(obj, score)
+        );
       });
-      let total = 0;
-      scores.forEach((num) => {
-        total += num;
-      });
-      const average = total / scores.length;
-      console.log("Average:", average, "score:", score);
-      let numberOfUsersPerScore = getNumberOfUsersPerScore(scores);
-      console.log(numberOfUsersPerScore, "numberOfUsersPerScore");
-      console.log(score, "score");
-      const totalItems = scores.length;
-      const uniqueItems = [...new Set(scores)];
-
-      const obj = percentagesByScore(scores, uniqueItems, totalItems);
-      this.greaterThan = greater(obj, score);
-      this.lessThan = less(obj, score);
-
-      this.bestScore =
-        score === this.maxScore && obj[score] === this.maxPercentage;
-      this.worseScore =
-        score === this.minScore && obj[score] === this.maxPercentage;
-
-      this.concludingMsg = scoreMessage(
-        this.bestScore,
-        this.worseScore,
-        score,
-        this.minScore,
-        greater(obj, score),
-        less(obj, score)
-      );
       this.toggleStart();
       // unsubscribe()
     },
@@ -106,8 +111,8 @@ export const useQuizStore = defineStore({
       // });
     },
     async newGame(payload) {
-      let currentDate = new Date().getTime(),
-        id = currentDate.toString();
+      const currentDate = new Date().getTime();
+      const id = currentDate.toString();
       await setDoc(doc(answersCollectionRef, id), {
         payload,
       });
@@ -136,7 +141,7 @@ export const useQuizStore = defineStore({
       console.log(this.questions, "this.questions");
       this.currentQuestion = this.randomQuestions.find((q) => !q.checked);
       if (this.currentQuestion === undefined) {
-        let points = this.questions.filter((q) => q.correct === true).length;
+        const points = this.questions.filter((q) => q.correct === true).length;
         console.log(
           this.questions.filter((q) => q.correct === true),
           this.questions,
