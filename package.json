@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "devDependencies": {
+    "nuxt": "3.0.0-rc.8"
+  },
+  "dependencies": {
+    "@nuxtjs/firebase": "^8.2.2",
+    "@pinia/nuxt": "^0.4.0",
+    "firebase": "^9.9.2",
+    "firebase-admin": "^11.0.1"
+  }
+}
