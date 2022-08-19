@@ -1,4 +1,4 @@
-const data = [
+export const data = [
   {
     question: " What percentage of DNA a chimpanzee shares with human?",
     answers: ["98%", "12%", "0%", "50%"],

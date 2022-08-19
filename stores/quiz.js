@@ -1,34 +1,32 @@
-import { defineStore } from "pinia";
-import { collection, query, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { defineStore } from 'pinia'
+import { collection, query, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import {
   getNumberOfUsersPerScore,
   percentagesByScore,
   greater,
   less,
   scoreMessage,
-} from "../use/useManageScore";
+} from '../use/useManageScore'
 /**
  * Firebase
  */
-import { db } from "@/js/firebase";
+import { data } from './data'
+import { db } from '@/js/firebase'
 
-const ROUND = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+const ROUND = (n) => Math.round((n + Number.EPSILON) * 100) / 100
 
-const questionsCollectionRef = collection(db, "questions");
-const answersCollectionRef = collection(db, "answers");
+const questionsCollectionRef = collection(db, 'questions')
+const answersCollectionRef = collection(db, 'answers')
 
 export const useQuizStore = defineStore({
-  id: "quiz",
+  id: 'quiz',
   state: () => ({
     start: false,
     rawQuestions: [],
-    questions: [],
+    questions: data,
     answers: [],
     currentQuestion: null,
-    game: {
-      score: 0,
-      name: "",
-    },
+    playerScore: 0,
     quantity: 2,
     average: 0,
     bestScore: null,
@@ -38,7 +36,7 @@ export const useQuizStore = defineStore({
     maxPercentage: 100,
     greaterThan: 0,
     lessThan: 0,
-    concludingMsg: "",
+    concludingMsg: '',
   }),
   getters: {
     showQuestions: (state) => state.start,
@@ -46,52 +44,52 @@ export const useQuizStore = defineStore({
       state.questions.sort(() => 0.5 - Math.random()).slice(0, state.quantity),
   },
   actions: {
-    getQuestions() {
-      const q = query(questionsCollectionRef);
-      onSnapshot(q, (querySnapshot) => {
-        const raw = [];
+    async getQuestions() {
+      const q = query(questionsCollectionRef)
+      await onSnapshot(q, (querySnapshot) => {
+        const raw = []
         querySnapshot.forEach((doc) => {
           raw.unshift({
             ...doc.data(),
             checked: false,
             correct: undefined,
-          });
-        });
-        this.questions = raw;
-        this.rawQuestions = raw;
-      });
+          })
+        })
+        this.questions = raw
+        this.rawQuestions = raw
+      })
       // unsubscribe()
     },
     async getScore(score) {
-      const q = query(answersCollectionRef);
-      let scores = [];
+      const q = query(answersCollectionRef)
+      let scores = []
       await onSnapshot(q, (querySnapshot) => {
-        const raw = [];
-        querySnapshot.forEach((item) => raw.unshift(item.data().score));
-        console.log(raw, "RAWWWW");
-        scores = raw;
+        const raw = []
+        querySnapshot.forEach((item) => raw.unshift(item.data().score))
+        console.log(raw, 'RAWWWW')
+        scores = raw
 
-        console.log(scores, "RAWWWWscores");
-        let total = 0;
+        console.log(scores, 'RAWWWWscores')
+        let total = 0
         scores.forEach((num) => {
-          total += num;
-        });
-        const average = total / scores.length;
-        console.log("Average:", average, "score:", score);
-        const numberOfUsersPerScore = getNumberOfUsersPerScore(scores);
-        console.log(numberOfUsersPerScore, "numberOfUsersPerScore");
-        console.log(score, "score");
-        const totalItems = scores.length;
-        const uniqueItems = [...new Set(scores)];
+          total += num
+        })
+        const average = total / scores.length
+        console.log('Average:', average, 'score:', score)
+        const numberOfUsersPerScore = getNumberOfUsersPerScore(scores)
+        console.log(numberOfUsersPerScore, 'numberOfUsersPerScore')
+        console.log(score, 'score')
+        const totalItems = scores.length
+        const uniqueItems = [...new Set(scores)]
 
-        const obj = percentagesByScore(scores, uniqueItems, totalItems);
-        this.greaterThan = greater(obj, score);
-        this.lessThan = less(obj, score);
+        const obj = percentagesByScore(scores, uniqueItems, totalItems)
+        this.greaterThan = greater(obj, score)
+        this.lessThan = less(obj, score)
 
         this.bestScore =
-          score === this.maxScore && obj[score] === this.maxPercentage;
+          score === this.maxScore && obj[score] === this.maxPercentage
         this.worseScore =
-          score === this.minScore && obj[score] === this.maxPercentage;
+          score === this.minScore && obj[score] === this.maxPercentage
 
         this.concludingMsg = scoreMessage(
           this.bestScore,
@@ -100,9 +98,9 @@ export const useQuizStore = defineStore({
           this.minScore,
           greater(obj, score),
           less(obj, score)
-        );
-      });
-      this.toggleStart();
+        )
+      })
+      // this.toggleStart();
       // unsubscribe()
     },
     async createQuestions() {
@@ -111,55 +109,53 @@ export const useQuizStore = defineStore({
       // });
     },
     async newGame(payload) {
-      const currentDate = new Date().getTime();
-      const id = currentDate.toString();
+      const currentDate = new Date().getTime()
+      const id = currentDate.toString()
       await setDoc(doc(answersCollectionRef, id), {
         payload,
-      });
+      })
     },
     startGame() {
-      this.concludingMsg = "";
-      this.currentQuestion = this.randomQuestions[0];
-      this.toggleStart();
+      this.toggleStart()
+      this.concludingMsg = ''
+      this.currentQuestion = this.randomQuestions[0]
     },
     async nextQuestion(answer) {
       this.questions = this.randomQuestions.map((q) => {
         if (q.answer === this.currentQuestion.answer) {
-          console.log(
-            this.currentQuestion.answer === answer,
-            "this.currentQuestion.answer === answer",
-            answer
-          );
           return {
             ...q,
             checked: true,
             correct: this.currentQuestion.answer === answer,
-          };
+            playerAnswer: answer,
+          }
         }
-        return q;
-      });
-      console.log(this.questions, "this.questions");
-      this.currentQuestion = this.randomQuestions.find((q) => !q.checked);
+        return q
+      })
+      this.currentQuestion = this.randomQuestions.find((q) => !q.checked)
       if (this.currentQuestion === undefined) {
-        const points = this.questions.filter((q) => q.correct === true).length;
+        this.answers = this.questions
+        const points = this.questions.filter((q) => q.correct === true).length
         console.log(
-          this.questions.filter((q) => q.correct === true),
+          this.questions.filter((q) => q.correct === true).length,
+          this.answers.length,
+          this.questions.filter((q) => q.correct === false).length,
           this.questions,
-          "Points",
+          'Points',
           points / this.quantity
-        );
-        const score = ROUND(points / this.quantity);
-        const time = new Date().getTime().toString();
+        )
+        this.playerScore = ROUND(points / this.quantity)
+        const time = new Date().getTime().toString()
         await setDoc(doc(answersCollectionRef, time), {
-          score,
+          score: this.playerScore,
           name: `user_${time}`,
-        });
-        this.getScore(score);
-        this.questions = this.rawQuestions;
+        })
+        this.getScore(this.playerScore)
+        this.questions = this.rawQuestions
       }
     },
     toggleStart() {
-      this.start = !this.start;
+      this.start = !this.start
     },
   },
-});
+})
