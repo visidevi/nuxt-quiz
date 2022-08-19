@@ -1,8 +1,8 @@
 /**
- * time {0: 3, 1: 4, 0.5: 1, 0.67: 2, 0.33: 1} Cantidad de usuarios por puntuacion
- * Porcentages por puntuacion{0: 27.27, 1: 36.36, 0.5: 9.09, 0.67: 18.18, 0.33: 9.09}
+ *
+ * @param {number} n
+ * @returns number
  */
-
 const ROUND = (n) => Math.round((n + Number.EPSILON) * 100) / 100
 
 /**
@@ -10,12 +10,24 @@ const ROUND = (n) => Math.round((n + Number.EPSILON) * 100) / 100
  * @response = { "score": "usersPerScore", .....}
  */
 
+/**
+ * number of users per score
+ * @param {[string]} scores
+ * @returns {score: usersPerScore}
+ */
 export const getNumberOfUsersPerScore = (scores) => {
   return scores.reduce((acc, val) => {
     acc[val] = acc[val] === undefined ? 1 : acc[val]++
     return acc
   }, {})
 }
+/**
+ * percentages by score
+ * @param {[string]} scores
+ * @param {[string]} uniqueItems
+ * @param {number} totalItems
+ * @returns { score: percentage%, ...}
+ */
 
 export const percentagesByScore = (scores, uniqueItems, totalItems) => {
   const response = {}
@@ -23,21 +35,43 @@ export const percentagesByScore = (scores, uniqueItems, totalItems) => {
     const numItems = scores.filter((sco) => sco === currScore)
     response[currScore] = ROUND((numItems.length * 100) / totalItems)
   })
-  console.log(response)
   return response
 }
 
+/**
+ *
+ * @param {{string:string}} obj
+ * @param {string} myScore
+ * @returns number
+ */
 export const greater = (obj, myScore) =>
   Object.keys(obj)
     .filter((i) => Number(parseFloat(i) || 0) > parseFloat(myScore))
     .map((item) => obj[item])
     .reduce((partialSum, a) => partialSum + a, 0)
 
+/**
+ *
+ * @param {{string:string}} obj
+ * @param {string} myScore
+ * @returns number
+ */
 export const less = (obj, myScore) =>
   Object.keys(obj)
     .filter((i) => Number(parseFloat(i) || 0) < parseFloat(myScore))
     .map((item) => obj[item])
     .reduce((partialSum, a) => partialSum + a, 0)
+
+/**
+ *
+ * @param {*} bestScore
+ * @param {*} worseScore
+ * @param {*} score
+ * @param {*} minScore
+ * @param {*} greaterThan
+ * @param {*} lessThan
+ * @returns string
+ */
 
 export const scoreMessage = (
   bestScore,
@@ -48,12 +82,12 @@ export const scoreMessage = (
   lessThan
 ) => {
   if (bestScore) {
-    return `You were the best quizzer`
+    return `You were the best 🤓 quizzer`
   } else if (worseScore) {
-    return `You were the worst quizzer`
+    return `You were the worst 🥹 quizzer`
   } else if (score === minScore) {
-    return `You were worse than ${greaterThan.toFixed(2)}% of all quizzer`
+    return `You were worse 😞 than ${greaterThan.toFixed(2)}% of all quizzer`
   } else {
-    return `You were better than ${lessThan.toFixed(2)}% of all quizzer`
+    return `You were better 🤓 than ${lessThan.toFixed(2)}% of all quizzer`
   }
 }

@@ -21,6 +21,7 @@ const answersCollectionRef = collection(db, 'answers')
 export const useQuizStore = defineStore({
   id: 'quiz',
   state: () => ({
+    loading: true,
     start: false,
     rawQuestions: [],
     questions: data,
@@ -45,6 +46,7 @@ export const useQuizStore = defineStore({
   },
   actions: {
     async getQuestions() {
+      this.loading = true
       const q = query(questionsCollectionRef)
       await onSnapshot(q, (querySnapshot) => {
         const raw = []
@@ -57,6 +59,7 @@ export const useQuizStore = defineStore({
         })
         this.questions = raw
         this.rawQuestions = raw
+        this.loading = false
       })
       // unsubscribe()
     },
@@ -99,6 +102,7 @@ export const useQuizStore = defineStore({
           greater(obj, score),
           less(obj, score)
         )
+        this.loading = false
       })
       // this.toggleStart();
       // unsubscribe()
@@ -134,6 +138,7 @@ export const useQuizStore = defineStore({
       })
       this.currentQuestion = this.randomQuestions.find((q) => !q.checked)
       if (this.currentQuestion === undefined) {
+        this.loading = true
         this.answers = this.questions
         const points = this.questions.filter((q) => q.correct === true).length
         console.log(

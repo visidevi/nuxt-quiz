@@ -1,66 +1,74 @@
 <template>
   <main class="main">
-    <div v-if="store.concludingMsg" class="content-container bg-white">
-      <div class="columns is-mobile is-centered">
-        <h2 class="is-full column">
-          {{ store.concludingMsg }}
-        </h2>
+    <progress v-if="store.loading" c class="progress is-link mb-0"></progress>
+    <Transition
+      mode="out-in"
+      :duration="550"
+      enter-active-class="animate__animated animate__tada"
+      leave-active-class="animate__animated animate__bounceOutRight"
+    >
+      <div v-if="!store.start" class="parallax play">
+        <h1 v-if="!store.start" @click="store.startGame">Play!</h1>
       </div>
-      <div class="columns is-mobile is-centered mt-0">
-        <div
-          class="column is-three-quarters-mobile is-two-thirds-tablet is-half-desktop is-one-third-widescreen"
-        >
-          <p class="is-size-7 has-text-weight-medium has-text-grey-light">
-            Score: {{ store.playerScore }} - Points: {{ points }}
-          </p>
-          <ol class="pb-6 pt-2 has-text-grey">
-            <li v-for="(a, i) in store.answers" :key="i">
-              <ul>
-                <li
-                  class="is-size-6"
-                  :class="
-                    b === a.playerAnswer && b === a.answer && 'has-text-success'
-                  "
-                >
-                  {{ a.question }}
-                </li>
-              </ul>
-              <div class="field">
-                <div class="control">
-                  <ul>
-                    <li v-for="b in a.answers" :key="b">
-                      <label
-                        :class="[
-                          b === a.playerAnswer &&
-                            a.correct &&
-                            b === a.answer &&
-                            'has-text-success',
-                          b === a.playerAnswer &&
-                            !a.correct &&
-                            'has-text-danger',
-                        ]"
-                        class="radio is-size-7"
-                      >
-                        <input
-                          type="radio"
-                          :name="b"
-                          disabled
-                          :checked="b == a.playerAnswer"
-                        />
-                        {{ b }}
-                      </label>
-                    </li>
-                  </ul>
+      <div v-else-if="store.concludingMsg" class="content-container bg-white">
+        <div class="columns is-mobile is-centered mt-0">
+          <h2 class="is-8 column mt-6 strong">
+            {{ store.concludingMsg }}
+          </h2>
+        </div>
+        <div class="columns is-mobile is-centered mt-0">
+          <div class="column is-half-mobile is-two-fifths-tablet">
+            <p class="is-size-7 has-text-weight-medium has-text-grey-light">
+              Score: {{ store.playerScore }} - Points: {{ points }}
+            </p>
+            <ol class="pb-6 pt-2 has-text-grey">
+              <li v-for="(a, i) in store.answers" :key="i">
+                <ul>
+                  <li
+                    class="is-size-6"
+                    :class="
+                      b === a.playerAnswer &&
+                      b === a.answer &&
+                      'has-text-success'
+                    "
+                  >
+                    {{ a.question }}
+                  </li>
+                </ul>
+                <div class="field">
+                  <div class="control">
+                    <ul>
+                      <li v-for="b in a.answers" :key="b">
+                        <label
+                          :class="[
+                            b === a.playerAnswer &&
+                              a.correct &&
+                              b === a.answer &&
+                              'has-text-success',
+                            b === a.playerAnswer &&
+                              !a.correct &&
+                              'has-text-danger',
+                          ]"
+                          class="radio is-size-7"
+                        >
+                          <input
+                            type="radio"
+                            :name="b"
+                            disabled
+                            :checked="b == a.playerAnswer"
+                          />
+                          {{ b }}
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </li>
-          </ol>
+              </li>
+            </ol>
+          </div>
         </div>
       </div>
-    </div>
-    <div v-if="!store.start" class="parallax play">
-      <h1 v-if="!store.start" @click="store.startGame">Play!</h1>
-    </div>
+    </Transition>
 
     <div
       class="content-container bg-white"
@@ -68,7 +76,7 @@
     >
       <div v-if="store.showQuestions && store.currentQuestion" class="Content">
         <div
-          class="columns is-mobile is-centered is-vcentered is-multiline is-flex"
+          class="columns is-mobile is-centered is-vcentered is-multiline is-flex mt-0"
         >
           <div class="column is-10">
             <h2>
@@ -100,23 +108,31 @@
       </div>
     </div>
 
-    <div v-if="store.start" class="parallax">
+    <div
+      v-if="store.start"
+      class="parallax"
+      :class="store.loading && 'has-background-link'"
+    >
       <button
         v-if="!store.concludingMsg"
         ref="nextBtnRef"
         :disabled="btnNextDisable"
-        class="button btn-next is-large is-link is-light is-inverted"
+        :class="store.loading ? 'is-loading' : 'btn-next  is-light'"
+        class="button is-large is-link"
         @click="nextQuestion"
       >
-        <span class="is-size-1"> {{ btnNextText }} </span>
+        <span class="is-size-1 has-text-weight-strong">
+          {{ btnNextText }}
+        </span>
       </button>
       <button
         v-if="store.concludingMsg"
-        ref="nextBtnRef"
         class="button btn-next is-large is-link is-light is-inverted"
         @click="store.startGame"
       >
-        <span class="is-size-1"> {{ btnNextText }} </span>
+        <span class="is-size-1 has-text-weight-strong">
+          {{ btnNextText }}
+        </span>
       </button>
     </div>
   </main>
@@ -127,7 +143,7 @@
  * Imports
  */
 import { onMounted, ref, computed, nextTick } from 'vue'
-import { useQuizStore } from '../stores/quiz'
+import { useQuizStore } from '../stores/quizStore'
 useHead({
   title: 'Quiz',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
@@ -180,6 +196,7 @@ const nextQuestion = () => {
 </script>
 <style>
 @import 'bulma/css/bulma.min.css';
+@import 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css';
 body {
   margin: 0;
 }
@@ -229,11 +246,15 @@ h1 {
 }
 h2,
 .btn-next {
-  letter-spacing: -1px;
+  letter-spacing: -3px;
   font-family: Open Sans;
   text-align: center;
   font-size: 60px;
   line-height: 60px;
+}
+h2.strong,
+button.btn-next {
+  font-weight: 800;
 }
 
 main.main {
@@ -242,6 +263,7 @@ main.main {
   height: 100vh;
   overflow-x: hidden;
   overflow-y: scroll;
+  background-color: #eff1fa;
 }
 
 .content-container {
