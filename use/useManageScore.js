@@ -86,8 +86,8 @@ export const scoreMessage = (
   } else if (worseScore) {
     return `You were the worst 🥹 quizzer`
   } else if (score === minScore) {
-    return `You were worse 😞 than ${greaterThan.toFixed(2)}% of all quizzer`
+    return `You were worse 😞 than ${greaterThan.toFixed()}% of all quizzer`
   } else {
-    return `You were better 🤓 than ${lessThan.toFixed(2)}% of all quizzer`
+    return `You were better 🤓 than ${lessThan.toFixed()}% of all quizzer`
   }
 }
