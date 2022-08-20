@@ -61,7 +61,6 @@ export const useQuizStore = defineStore({
         this.rawQuestions = raw
         this.loading = false
       })
-      // unsubscribe()
     },
     async getScore(score) {
       const q = query(answersCollectionRef)
@@ -69,19 +68,13 @@ export const useQuizStore = defineStore({
       await onSnapshot(q, (querySnapshot) => {
         const raw = []
         querySnapshot.forEach((item) => raw.unshift(item.data().score))
-        console.log(raw, 'RAWWWW')
         scores = raw
-
-        console.log(scores, 'RAWWWWscores')
         let total = 0
         scores.forEach((num) => {
           total += num
         })
         const average = total / scores.length
-        console.log('Average:', average, 'score:', score)
         const numberOfUsersPerScore = getNumberOfUsersPerScore(scores)
-        console.log(numberOfUsersPerScore, 'numberOfUsersPerScore')
-        console.log(score, 'score')
         const totalItems = scores.length
         const uniqueItems = [...new Set(scores)]
 
@@ -104,8 +97,6 @@ export const useQuizStore = defineStore({
         )
         this.loading = false
       })
-      // this.toggleStart();
-      // unsubscribe()
     },
     async createQuestions() {
       // await data.forEach(async (item) => {
@@ -141,14 +132,6 @@ export const useQuizStore = defineStore({
         this.loading = true
         this.answers = this.questions
         const points = this.questions.filter((q) => q.correct === true).length
-        console.log(
-          this.questions.filter((q) => q.correct === true).length,
-          this.answers.length,
-          this.questions.filter((q) => q.correct === false).length,
-          this.questions,
-          'Points',
-          points / this.quantity
-        )
         this.playerScore = ROUND(points / this.quantity)
         const time = new Date().getTime().toString()
         await setDoc(doc(answersCollectionRef, time), {

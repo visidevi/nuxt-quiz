@@ -1,141 +1,27 @@
 <template>
-  <main class="main">
-    <progress v-if="store.loading" c class="progress is-link mb-0"></progress>
+  <Layout>
     <Transition
-      mode="out-in"
       :duration="550"
       enter-active-class="animate__animated animate__tada"
       leave-active-class="animate__animated animate__bounceOutRight"
     >
-      <div v-if="!store.start" class="parallax play">
-        <h1 v-if="!store.start" @click="store.startGame">Play!</h1>
-      </div>
-      <div v-else-if="store.concludingMsg" class="content-container bg-white">
-        <div class="columns is-mobile is-centered mt-0">
-          <h2 class="is-8 column mt-6 strong">
-            {{ store.concludingMsg }}
-          </h2>
-        </div>
-        <div class="columns is-mobile is-centered mt-0">
-          <div class="column is-half-mobile is-two-fifths-tablet">
-            <p class="is-size-7 has-text-weight-medium has-text-grey-light">
-              Score: {{ store.playerScore }} - Points: {{ points }}
-            </p>
-            <ol class="pb-6 pt-2 has-text-grey">
-              <li v-for="(a, i) in store.answers" :key="i">
-                <ul>
-                  <li
-                    class="is-size-6"
-                    :class="
-                      b === a.playerAnswer &&
-                      b === a.answer &&
-                      'has-text-success'
-                    "
-                  >
-                    {{ a.question }}
-                  </li>
-                </ul>
-                <div class="field">
-                  <div class="control">
-                    <ul>
-                      <li v-for="b in a.answers" :key="b">
-                        <label
-                          :class="[
-                            b === a.playerAnswer &&
-                              a.correct &&
-                              b === a.answer &&
-                              'has-text-success',
-                            b === a.playerAnswer &&
-                              !a.correct &&
-                              'has-text-danger',
-                          ]"
-                          class="radio is-size-7"
-                        >
-                          <input
-                            type="radio"
-                            :name="b"
-                            disabled
-                            :checked="b == a.playerAnswer"
-                          />
-                          {{ b }}
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
+      <Play v-if="!store.start || store.loader" />
+      <Results v-else-if="store.concludingMsg" />
     </Transition>
-
-    <div
-      class="content-container bg-white"
-      :class="store.showQuestions && store.currentQuestion && 'bg-white'"
-    >
-      <div v-if="store.showQuestions && store.currentQuestion" class="Content">
-        <div
-          class="columns is-mobile is-centered is-vcentered is-multiline is-flex mt-0"
-        >
-          <div class="column is-10">
-            <h2>
-              {{ store.currentQuestion.question }}
-            </h2>
-          </div>
-          <div
-            v-if="store.showQuestions && store.currentQuestion"
-            class="column is-10"
-          >
-            <div
-              class="buttons are-larger is-centered is-flex"
-              :checked="checked"
-            >
-              <button
-                v-for="asw in store.currentQuestion.answers"
-                :key="asw"
-                class="button is-responsive is-large"
-                type="button"
-                :disabled="checked"
-                :class="[clicked === asw && answer, clicked && color(asw)]"
-                @click="selectAnswer(asw)"
-              >
-                {{ asw }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="store.start"
-      class="parallax"
-      :class="store.loading && 'has-background-link'"
-    >
-      <button
-        v-if="!store.concludingMsg"
-        ref="nextBtnRef"
-        :disabled="btnNextDisable"
-        :class="store.loading ? 'is-loading' : 'btn-next  is-light'"
-        class="button is-large is-link"
-        @click="nextQuestion"
-      >
-        <span class="is-size-1 has-text-weight-strong">
-          {{ btnNextText }}
-        </span>
-      </button>
-      <button
-        v-if="store.concludingMsg"
-        class="button btn-next is-large is-link is-light is-inverted"
-        @click="store.startGame"
-      >
-        <span class="is-size-1 has-text-weight-strong">
-          {{ btnNextText }}
-        </span>
-      </button>
-    </div>
-  </main>
+    <Questions
+      :clicked="clicked"
+      :checked="checked"
+      :answer="answer"
+      @onClickHandler="updateQuestions"
+    />
+    <Actions
+      ref="actionsRef"
+      :text="btnNextText"
+      :focus="focus"
+      :disabled="btnNextDisabled"
+      @onClickHandlerNext="nextQuestion"
+    />
+  </Layout>
 </template>
 
 <script setup>
@@ -143,55 +29,67 @@
  * Imports
  */
 import { onMounted, ref, computed, nextTick } from 'vue'
-import { useQuizStore } from '../stores/quizStore'
-useHead({
-  title: 'Quiz',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-  charset: 'utf-8',
-  meta: [{ name: 'description', content: 'Home assignment - Quiz' }],
-  bodyAttrs: {
-    class: 'nuxtjs-vuejs',
-  },
+import { useQuizStore } from '@/stores/quizStore'
+/**
+ * Components
+ */
+import Questions from '@/components/Questions.vue'
+import Actions from '@/components/Actions.vue'
+import Layout from '@/components/Layout.vue'
+import Results from '@/components/Results.vue'
+import Play from '@/components/Play.vue'
+/**
+ * Store
+ */
+const store = useQuizStore()
+/**
+ * Mounted
+ */
+onMounted(() => {
+  store.getQuestions()
 })
+/**
+ * Reactive Refs
+ */
 const clicked = ref('')
 const checked = ref(false)
-const btnNextDisable = ref(true)
-const store = useQuizStore()
-const nextBtnRef = ref(null)
-const points = computed(() => {
-  return `${store.answers.filter((q) => q.correct === true).length} /
-            ${store.answers.length}`
+const btnNextDisabled = ref(true)
+const focus = ref(false)
+const actionsRef = ref(null)
+
+const answer = computed(() => {
+  return store.currentQuestion?.answer === clicked.value ? 'green-color' : 'red'
 })
+
+/**
+ * Computed
+ */
 const btnNextText = computed(() => {
   if (store.concludingMsg) return `Play Again!`
   return 'Next'
 })
 
-const focusNextBtn = () => {
-  nextBtnRef.value.focus()
-}
-onMounted(() => {
-  store.getQuestions()
-})
-const answer = computed(() => {
-  if (store.currentQuestion.answer === clicked.value) return 'green-color'
-  return 'red'
-})
-const color = (a) => {
-  if (store.currentQuestion.answer === a) return 'is-hovered'
-}
-const selectAnswer = async (val) => {
-  clicked.value = val
-  checked.value = true
-  btnNextDisable.value = false
-  await nextTick()
+/**
+ *
+ * Methods
+ */
+onMounted(() => {})
+const updateQuestions = (event) => {
+  clicked.value = event.clicked
+  checked.value = event.checked
+  btnNextDisabled.value = event.disabled
   focusNextBtn()
 }
+const focusNextBtn = async () => {
+  await nextTick()
+  actionsRef.value.focusNextBtn()
+}
+
 const nextQuestion = () => {
-  btnNextDisable.value = true
   store.nextQuestion(clicked.value)
   checked.value = false
   clicked.value = ''
+  btnNextDisabled.value = true
 }
 </script>
 <style>
@@ -272,14 +170,12 @@ main.main {
 
   z-index: 1;
 }
-.bg-white {
-  background-color: white;
-}
 
 .Content {
   max-width: 750px;
   margin: 0 auto;
   padding: 75px 0;
+  min-height: 50vh;
 }
 
 .m-75,
