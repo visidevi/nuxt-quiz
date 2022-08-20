@@ -4,7 +4,7 @@
       <div
         class="columns is-mobile is-centered is-vcentered is-multiline is-flex mt-0"
       >
-        <div class="column is-10">
+        <div class="column is-10 is-flex-wrap-wrap">
           <h2>
             {{ store.currentQuestion.question }}
           </h2>

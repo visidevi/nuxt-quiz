@@ -150,10 +150,6 @@ h2,
   font-size: 60px;
   line-height: 60px;
 }
-h2.strong,
-button.btn-next {
-  font-weight: 800;
-}
 
 main.main {
   perspective: 1px;
@@ -209,5 +205,12 @@ main.main {
   padding-top: calc(0.5em - 20px);
   text-align: center;
   white-space: nowrap;
+}
+.difficulty-levels button {
+  font-family: Open Sans;
+}
+h2.strong,
+button.btn-next .difficulty-levels button {
+  font-weight: 800;
 }
 </style>

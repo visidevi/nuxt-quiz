@@ -64,17 +64,17 @@ export const useQuizStore = defineStore({
     },
     async getScore(score) {
       const q = query(answersCollectionRef)
-      let scores = []
+
       await onSnapshot(q, (querySnapshot) => {
-        const raw = []
-        querySnapshot.forEach((item) => raw.unshift(item.data().score))
-        scores = raw
-        let total = 0
-        scores.forEach((num) => {
-          total += num
-        })
-        const average = total / scores.length
-        const numberOfUsersPerScore = getNumberOfUsersPerScore(scores)
+        const scores = []
+        querySnapshot.forEach((item) => scores.unshift(item.data().score))
+
+        // let total = 0
+        // scores.forEach((num) => {
+        //   total += num
+        // })
+        // const average = total / scores.length
+        // const numberOfUsersPerScore = getNumberOfUsersPerScore(scores)
         const totalItems = scores.length
         const uniqueItems = [...new Set(scores)]
 
@@ -110,7 +110,8 @@ export const useQuizStore = defineStore({
         payload,
       })
     },
-    startGame() {
+    startGame(n) {
+      this.quantity = n
       this.toggleStart()
       this.concludingMsg = ''
       this.currentQuestion = this.randomQuestions[0]

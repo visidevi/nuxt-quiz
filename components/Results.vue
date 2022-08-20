@@ -13,7 +13,7 @@
         <ol class="pb-6 pt-2 has-text-grey">
           <li v-for="(question, i) in store.answers" :key="i">
             <ul>
-              <li class="is-size-6">
+              <li class="is-size-6 .wr-break">
                 {{ question.question }}
               </li>
             </ul>
@@ -64,3 +64,9 @@ const points = computed(() => {
             ${store.answers.length}`
 })
 </script>
+
+<style>
+.wr-break {
+  word-break: break-all;
+}
+</style>
