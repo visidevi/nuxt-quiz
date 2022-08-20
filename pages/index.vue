@@ -109,7 +109,6 @@ div[checked='true'] button.red {
 div[checked='true'] button.green-color {
   border-color: green;
   color: green;
-  padding: 5px;
   background-color: white;
 }
 .columns.is-vcentered {
