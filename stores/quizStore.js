@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { collection, query, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import {
-  getNumberOfUsersPerScore,
   percentagesByScore,
   greater,
   less,
@@ -68,13 +67,6 @@ export const useQuizStore = defineStore({
       await onSnapshot(q, (querySnapshot) => {
         const scores = []
         querySnapshot.forEach((item) => scores.unshift(item.data().score))
-
-        // let total = 0
-        // scores.forEach((num) => {
-        //   total += num
-        // })
-        // const average = total / scores.length
-        // const numberOfUsersPerScore = getNumberOfUsersPerScore(scores)
         const totalItems = scores.length
         const uniqueItems = [...new Set(scores)]
 

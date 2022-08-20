@@ -38,7 +38,6 @@
 /**
  * Imports
  */
-import { computed } from 'vue'
 import { useQuizStore } from '../stores/quizStore'
 
 const store = useQuizStore()
